@@ -37,6 +37,8 @@ public class Formulario extends JFrame {
 	private JTextField txtNome;
 	private JTextField textCod;
 	private JTable table;
+	private JLabel contador;
+	private JButton btnCancelar;
 
 	/**
 	 * Launch the application.
@@ -64,14 +66,9 @@ public class Formulario extends JFrame {
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
-		contentPane.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("default:grow"),},
-			new RowSpec[] {
-				FormSpecs.DEFAULT_ROWSPEC,
-				RowSpec.decode("5dlu"),
-				FormSpecs.DEFAULT_ROWSPEC,
-				RowSpec.decode("max(15dlu;default)"),
-				RowSpec.decode("default:grow"),}));
+		contentPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("default:grow"), },
+				new RowSpec[] { FormSpecs.DEFAULT_ROWSPEC, RowSpec.decode("5dlu"), FormSpecs.DEFAULT_ROWSPEC,
+						RowSpec.decode("max(15dlu;default)"), RowSpec.decode("default:grow"), }));
 
 		JPanel camposTexto = new JPanel();
 		contentPane.add(camposTexto, "1, 1, fill, fill");
@@ -98,20 +95,12 @@ public class Formulario extends JFrame {
 
 		JPanel botoes = new JPanel();
 		contentPane.add(botoes, "1, 3, fill, fill");
-		botoes.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("18dlu"),
-				FormSpecs.DEFAULT_COLSPEC,
-				FormSpecs.MIN_COLSPEC,
-				FormSpecs.RELATED_GAP_COLSPEC,
-				FormSpecs.DEFAULT_COLSPEC,
-				FormSpecs.DEFAULT_COLSPEC,
-				FormSpecs.RELATED_GAP_COLSPEC,
-				FormSpecs.DEFAULT_COLSPEC,
-				FormSpecs.DEFAULT_COLSPEC,
-				FormSpecs.RELATED_GAP_COLSPEC,
-				FormSpecs.DEFAULT_COLSPEC,},
-			new RowSpec[] {
-				FormSpecs.DEFAULT_ROWSPEC,}));
+		botoes.setLayout(new FormLayout(
+				new ColumnSpec[] { ColumnSpec.decode("18dlu"), FormSpecs.DEFAULT_COLSPEC, FormSpecs.MIN_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
+						FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC, },
+				new RowSpec[] { FormSpecs.DEFAULT_ROWSPEC, }));
 
 		JButton btnCadastrar = new JButton("CADASTRAR");
 		btnCadastrar.addActionListener(new ActionListener() {
@@ -141,30 +130,96 @@ public class Formulario extends JFrame {
 		botoes.add(btnCadastrar, "2, 1");
 
 		JButton btnAlterar = new JButton("ALTERAR");
+		btnAlterar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int menu = JOptionPane.showConfirmDialog(null, "Tem certeza que deseja alterar?");
+				String alteracao = txtNome.getText(); 
+				int idusuario = Integer.parseInt(textCod.getText());
+
+				if (menu == 0) {
+
+					try {
+						Conexao conexao = new Conexao();
+						String sql = "update usuarios set nomeusuario = ? where idusuarios = ?";
+						PreparedStatement pstmt = conexao.conectar().prepareStatement(sql);
+						pstmt.setString(1, alteracao);
+						pstmt.setInt(2, idusuario);
+						pstmt.execute();
+						JOptionPane.showMessageDialog(null, "Cliente alterado com sucesso");
+					} catch (Exception erro) {
+						JOptionPane.showMessageDialog(null, "Falha ao alterar cliente");
+						System.out.println(erro.getMessage());
+					}
+
+				}
+				
+				table.setModel(listarDados());
+				txtNome.setText("");
+				textCod.setText("");
+				
+				
+			}
+		});
 		botoes.add(btnAlterar, "5, 1");
 
 		JButton btnExcluir = new JButton("EXCLUIR");
+		btnExcluir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int menu = JOptionPane.showConfirmDialog(null, "Tem certeza que deseja excluir o usuário "+txtNome.getText()+"?");
+				int idusuario = Integer.parseInt(textCod.getText());
+
+				if (menu == 0) {
+
+					try {
+						Conexao conexao = new Conexao();
+						String sql = "delete from usuarios where idusuarios = ?";
+						PreparedStatement pstmt = conexao.conectar().prepareStatement(sql);
+						pstmt.setInt(1, idusuario);
+						pstmt.execute();
+						JOptionPane.showMessageDialog(null, "Cliente excluido");
+					} catch (Exception erro) {
+						JOptionPane.showMessageDialog(null, "Falha ao excluir cliente");
+						System.out.println(erro.getMessage());
+					}
+
+				}
+				
+				table.setModel(listarDados());
+				txtNome.setText("");
+				textCod.setText("");
+				btnCadastrar.setEnabled(true);
+				btnExcluir.setEnabled(false);
+				btnAlterar.setEnabled(false);
+				btnCancelar.setEnabled(false);
+				
+				
+			}
+		});
 		botoes.add(btnExcluir, "8, 1");
 
-		JButton btnCancelar = new JButton("CANCELAR");
+		btnCancelar = new JButton("CANCELAR");
 		btnCancelar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				btnCadastrar.setEnabled(true);
 				btnAlterar.setEnabled(false);
 				btnExcluir.setEnabled(false);
+				btnCancelar.setEnabled(false);
 				int linhaSelecionada = table.getSelectedRow();
-				table.getSelectionModel().removeSelectionInterval(linhaSelecionada,0);
-				
+				table.getSelectionModel().removeSelectionInterval(linhaSelecionada, 0);
+				contador.setText("0/0");
+				txtNome.setText("");
+				textCod.setText("");
+
 			}
 		});
 		botoes.add(btnCancelar, "11, 1");
-		
+
 		btnCadastrar.setEnabled(true);
 		btnAlterar.setEnabled(false);
 		btnExcluir.setEnabled(false);
 		btnCancelar.setEnabled(false);
-		
-		JLabel contador = new JLabel("(0/0)");
+
+		contador = new JLabel("(0/0)");
 		contador.setVerticalAlignment(SwingConstants.TOP);
 		contador.setHorizontalAlignment(SwingConstants.CENTER);
 		contentPane.add(contador, "1, 4");
@@ -176,14 +231,14 @@ public class Formulario extends JFrame {
 		scrool.add(scrollPane);
 
 		table = new JTable();
-		
+
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				int linhaSelecionada = table.getSelectedRow();
 				textCod.setText(table.getValueAt(linhaSelecionada, 0).toString());
 				txtNome.setText(table.getValueAt(linhaSelecionada, 1).toString());
-				contador.setText("("+(linhaSelecionada+1)+"/"+table.getRowCount()+")");
+				contador.setText("(" + (linhaSelecionada + 1) + "/" + table.getRowCount() + ")");
 				btnCadastrar.setEnabled(false);
 				btnAlterar.setEnabled(true);
 				btnExcluir.setEnabled(true);
@@ -191,9 +246,9 @@ public class Formulario extends JFrame {
 			};
 		});
 		table.setModel(listarDados());
-		table.setRowSelectionInterval(0,0);
+		table.setRowSelectionInterval(0, 0);
 		int linhaSelecionada = table.getSelectedRow();
-		contador.setText("("+(linhaSelecionada+1)+"/"+table.getRowCount()+")");
+		contador.setText("(" + (linhaSelecionada + 1) + "/" + table.getRowCount() + ")");
 		scrollPane.setViewportView(table);
 	}
 
@@ -205,7 +260,7 @@ public class Formulario extends JFrame {
 
 		try {
 			Conexao conexao = new Conexao();
-			String sql = "select * from clientes";
+			String sql = "select * from usuarios";
 
 			Statement stmt = conexao.conectar().createStatement();
 
